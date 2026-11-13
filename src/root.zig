@@ -13,10 +13,14 @@ pub const WriteTarget = union(enum) {
 };
 
 pub const WriteOptions = struct {
+    /// 时间格式
     time_fmt: []const u8 = "YYYY-MM-DDTHH:mm:ssZ",
+    /// 时区偏移量（分钟）
     timezone_offset: i32 = 0,
-    /// 隐藏 scope 字段。用于不需要 scope 的目标。
+    /// 隐藏 scope 字段
     hide_scope: bool = false,
+    /// 没有颜色
+    no_color: ?bool = null,
 };
 
 pub fn format(
@@ -51,19 +55,22 @@ fn Instance(
                     w = wt.terminal.writer;
                     t = wt.terminal;
                 },
-                .raw => w = wt.raw,
+                .raw => {
+                    w = wt.raw;
+                    if (options.no_color == false) t = .{ .writer = w, .mode = .escape_codes };
+                },
             }
             if (self.timestamp) |ts| {
                 const time = Time.fromNanoTimestamp(ts.nanoseconds).setLoc(.create(options.timezone_offset, ""));
                 try time.fmt(options.time_fmt).format(w); // 写入格式化的时间
                 try w.writeAll(" "); // 时间后追加空格
             }
-            if (t) |term| {
+            if (options.no_color != true) if (t) |term| {
                 term.setColor(Self.LEVEL_C) catch {};
                 term.setColor(.bold) catch {};
-            }
+            };
             try w.writeAll(Self.LEVEL_S ++ " "); // 写入级别字符串
-            if (t) |term| term.setColor(.reset) catch {};
+            if (options.no_color != true) if (t) |term| term.setColor(.reset) catch {};
             if (!options.hide_scope) {
                 try w.writeAll(@tagName(Self.SCOPE) ++ " "); // 写入 scope 字符串
             }
