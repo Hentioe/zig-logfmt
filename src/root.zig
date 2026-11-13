@@ -13,8 +13,10 @@ pub const WriteTarget = union(enum) {
 };
 
 pub const WriteOptions = struct {
+    pub const DEFAULT_TIME_FMT = "YYYY-MM-DDTHH:mm:ssZ";
+
     /// 时间格式
-    time_fmt: []const u8 = "YYYY-MM-DDTHH:mm:ssZ",
+    time_fmt: []const u8 = DEFAULT_TIME_FMT,
     /// 时区偏移量（分钟）
     timezone_offset: i32 = 0,
     /// 隐藏 scope 字段
